@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include "TrinketHidCombo.h"
 #include <WS2812.h>
 
