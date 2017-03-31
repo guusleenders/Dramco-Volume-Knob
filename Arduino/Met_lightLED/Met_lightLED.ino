@@ -12,12 +12,14 @@ static uint8_t enc_prev_pos   = 0;
 static uint8_t enc_flags      = 0;
 static char    sw_was_pressed = 0;
 
+static uint16_t count = 0;
+
 WS2812 LED(NUMPIXELS);
 cRGB value;
 
 int currentPosition = 3;
 
-const uint8_t PROGMEM gamma8[] = {
+/*const uint8_t PROGMEM gamma8[] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
     1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
@@ -33,7 +35,7 @@ const uint8_t PROGMEM gamma8[] = {
   115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
   144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
-  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };*/
   
 void setup()
 {
@@ -84,12 +86,12 @@ byte calcPosition(byte current, int next){
 }
 
 void updateRing(){
-  value.b = pgm_read_byte(&gamma8[200]); value.g = pgm_read_byte(&gamma8[200]); value.r = pgm_read_byte(&gamma8[200]);
+  //value.b = pgm_read_byte(&gamma8[200]); value.g = pgm_read_byte(&gamma8[200]); value.r = pgm_read_byte(&gamma8[200]);
   LED.set_crgb_at(currentPosition, value);
-  value.b = pgm_read_byte(&gamma8[85]); value.g = pgm_read_byte(&gamma8[85]); value.r = pgm_read_byte(&gamma8[85]);
+ // value.b = pgm_read_byte(&gamma8[85]); value.g = pgm_read_byte(&gamma8[85]); value.r = pgm_read_byte(&gamma8[85]);
   LED.set_crgb_at(calcPosition(currentPosition, -1), value); 
   LED.set_crgb_at(calcPosition(currentPosition, +1), value);
-  value.b = pgm_read_byte(&gamma8[40]); value.g = pgm_read_byte(&gamma8[40]); value.r = pgm_read_byte(&gamma8[40]); 
+  //value.b = pgm_read_byte(&gamma8[40]); value.g = pgm_read_byte(&gamma8[40]); value.r = pgm_read_byte(&gamma8[40]); 
   LED.set_crgb_at(calcPosition(currentPosition, -2), value);  
   LED.set_crgb_at(calcPosition(currentPosition, +2), value);
   value.b = 0; value.g = 0; value.r = 0; 
@@ -180,8 +182,8 @@ void loop(){
   {
     if (sw_was_pressed == 0) // only on initial press, so the keystroke is not repeated while the button is held down
     {
-      TrinketHidCombo.pressMultimediaKey(MMKEY_MUTE);
-      value.b = pgm_read_byte(&gamma8[100]); value.g = pgm_read_byte(&gamma8[100]); value.r = pgm_read_byte(&gamma8[100]);
+      TrinketHidCombo.pressMultimediaKey(MMKEY_PLAYPAUSE);
+      //value.b = pgm_read_byte(&gamma8[100]); value.g = pgm_read_byte(&gamma8[100]); value.r = pgm_read_byte(&gamma8[100]);
       for(byte i = 0; i < 7; i++){
         LED.set_crgb_at(i, value);
       }
@@ -189,6 +191,13 @@ void loop(){
       delay(5); // debounce delay
     }
     sw_was_pressed = 1;
+    count++;
+    delay(1);
+    if (count > 500){
+      TrinketHidCombo.pressMultimediaKey(MMKEY_PLAYPAUSE);
+      TrinketHidCombo.pressMultimediaKey(MMKEY_SCAN_NEXT_TRACK);
+      count = 0;
+    }
   }
   else
   {
@@ -202,6 +211,7 @@ void loop(){
       delay(5); // debounce delay
     }
     sw_was_pressed = 0;
+    count = 0;
   }
 
   TrinketHidCombo.poll(); // check if USB needs anything done
