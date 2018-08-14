@@ -12,12 +12,15 @@ static uint8_t enc_prev_pos   = 0;
 static uint8_t enc_flags      = 0;
 static char    sw_was_pressed = 0;
 
+static uint16_t count = 0;
+static uint8_t doubleTap = 0;
+
 WS2812 LED(NUMPIXELS);
 cRGB value;
 
 int currentPosition = 3;
 
-const uint8_t PROGMEM gamma8[] = {
+/*const uint8_t PROGMEM gamma8[] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
     1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
@@ -33,10 +36,11 @@ const uint8_t PROGMEM gamma8[] = {
   115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
   144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
-  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };*/
   
 void setup()
 {
+  int i;
   // set pins as input with internal pull-up resistors enabled
   pinMode(PIN_ENCODER_A, INPUT);
   pinMode(PIN_ENCODER_B, INPUT);
@@ -60,8 +64,14 @@ void setup()
   if (digitalRead(PIN_ENCODER_B) == LOW) {
     enc_prev_pos |= (1 << 1);
   }
+  value.b = 11; value.g = 13; value.r = 15;
 
-  updateRing();
+  for (i=0;i<NUMPIXELS;i++){
+      LED.set_crgb_at(i, value);
+  }
+
+  LED.sync();
+  //updateRing();
 
 }
 
@@ -71,7 +81,7 @@ void updatePosition(int next){
     currentPosition = currentPosition + 7;
   if(currentPosition > 6)
     currentPosition = currentPosition - 7;
-  updateRing();
+  //updateRing();
 }
 
 byte calcPosition(byte current, int next){
@@ -84,12 +94,12 @@ byte calcPosition(byte current, int next){
 }
 
 void updateRing(){
-  value.b = pgm_read_byte(&gamma8[200]); value.g = pgm_read_byte(&gamma8[200]); value.r = pgm_read_byte(&gamma8[200]);
+  //value.b = pgm_read_byte(&gamma8[200]); value.g = pgm_read_byte(&gamma8[200]); value.r = pgm_read_byte(&gamma8[200]);
   LED.set_crgb_at(currentPosition, value);
-  value.b = pgm_read_byte(&gamma8[85]); value.g = pgm_read_byte(&gamma8[85]); value.r = pgm_read_byte(&gamma8[85]);
+ // value.b = pgm_read_byte(&gamma8[85]); value.g = pgm_read_byte(&gamma8[85]); value.r = pgm_read_byte(&gamma8[85]);
   LED.set_crgb_at(calcPosition(currentPosition, -1), value); 
   LED.set_crgb_at(calcPosition(currentPosition, +1), value);
-  value.b = pgm_read_byte(&gamma8[40]); value.g = pgm_read_byte(&gamma8[40]); value.r = pgm_read_byte(&gamma8[40]); 
+  //value.b = pgm_read_byte(&gamma8[40]); value.g = pgm_read_byte(&gamma8[40]); value.r = pgm_read_byte(&gamma8[40]); 
   LED.set_crgb_at(calcPosition(currentPosition, -2), value);  
   LED.set_crgb_at(calcPosition(currentPosition, +2), value);
   value.b = 0; value.g = 0; value.r = 0; 
@@ -176,32 +186,39 @@ void loop(){
   }
 
   // remember that the switch is active-high
-  if (bit_is_set(TRINKET_PINx, PIN_ENCODER_SWITCH)) 
-  {
+  if (bit_is_set(TRINKET_PINx, PIN_ENCODER_SWITCH)) {
     if (sw_was_pressed == 0) // only on initial press, so the keystroke is not repeated while the button is held down
     {
       TrinketHidCombo.pressMultimediaKey(MMKEY_MUTE);
-      value.b = pgm_read_byte(&gamma8[100]); value.g = pgm_read_byte(&gamma8[100]); value.r = pgm_read_byte(&gamma8[100]);
-      for(byte i = 0; i < 7; i++){
+      //TrinketHidCombo.pressKey(0 ,KEYCODE_1);
+      //value.b = pgm_read_byte(&gamma8[100]); value.g = pgm_read_byte(&gamma8[100]); value.r = pgm_read_byte(&gamma8[100]);
+      /*for(byte i = 0; i < 7; i++){
         LED.set_crgb_at(i, value);
       }
-      LED.sync();
+      LED.sync();*/
       delay(5); // debounce delay
     }
     sw_was_pressed = 1;
-  }
-  else
-  {
+//    count++;
+//    delay(1);
+//    if (count > 500){
+//      TrinketHidCombo.pressMultimediaKey(MMKEY_PLAYPAUSE);
+//      TrinketHidCombo.pressMultimediaKey(MMKEY_SCAN_NEXT_TRACK);
+//      count = 0;
+//    }
+  }else{
     if (sw_was_pressed != 0) {
-      value.b = 0; value.g = 0; value.r = 0;
+      /*value.b = 0; value.g = 0; value.r = 0;
       for(byte i = 0; i < 7; i++){
         LED.set_crgb_at(i, value);
       }
       updateRing();
-      LED.sync();
+      LED.sync();*/
+      
       delay(5); // debounce delay
     }
     sw_was_pressed = 0;
+    delay(5); // debounce delay
   }
 
   TrinketHidCombo.poll(); // check if USB needs anything done
